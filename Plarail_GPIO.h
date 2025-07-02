@@ -9,6 +9,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #define TRIG 23
 #define ECHO 24
@@ -21,7 +22,7 @@ void startTrain(int iHndl);
 void stopTrain(int iHndl);
 bool startSensor(int iHndl);
 bool stopSensor(int iHndl);
-void measureDistance(int iHndl);
+void *measureDistance(void *vpArg);
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpUserdata);
 void outputLog(char cMsg[]);
 
