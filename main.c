@@ -1,20 +1,20 @@
 #include <Pla-rail_GPIO.h>
+#define PI5 4
 #define MAX_NUM_USERINPUT 16
 #define COMPLETE_MATCH 0
 #define STOPPING 0
 #define RUN 1
 
-//引数を入れてない
-//gotoのジャンプ地点を設定してない
+//引数を入れてない！！！！
 
 int main(void)
 {
     int iIsTrainRunning = 0;
     char cUserInput[16]
 
-    int iHndl = lgGpiochipOpen(PI5);
-    if (setGpio == true)
+    if (setGpio() == true)
     {
+        goto failure;
     }
     while(1)
     {
@@ -33,6 +33,10 @@ int main(void)
                     startTrain()
                     iIsTrainRunning = RUN;
                 }
+                else
+                {
+                    goto failure;
+                }
             }
             else if (strcmp(cUserInput,"stop") == COMPLETE_MATCH)
             {
@@ -45,6 +49,10 @@ int main(void)
                 {
                     stopTrain();
                     iIsTrainRunning = STOPPING;
+                }
+                else
+                {
+                    goto failure;
                 }
             }
             else if ((strcmp(cUserInput,"exit") == COMPLETE_MATCH))
@@ -73,7 +81,7 @@ int main(void)
     lgGpiochipClose(iHundl);
     return EXIT_SUCCESS;
 
-    end:
+    failure://失敗
         lgGpiochipClose(iHundl);
         return EXIT_FAILURE;
 }
