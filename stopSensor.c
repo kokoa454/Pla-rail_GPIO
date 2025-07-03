@@ -1,15 +1,15 @@
 #include "Plarail_GPIO.h"
 
-bool stopSensor(int iMeasureDistance)
+bool stopSensor(int *piMeasureDistanceId)
 {
-    if(lgGpioSetAlertFunc(iHndl, ECHO, NULL, NULL) != 0)
+    if(lgGpioSetAlertFunc(iHndl, ECHO, NULL, NULL) == FUNC_FAILURE)
     {
         outputLog("測距センサの停止に失敗しました");
-        return false;
+        return FUNC_FAILURE;
     }
 
-    lgThreadStop(iMeasureDistance);
+    lgThreadStop(*piMeasureDistanceId);
     
     outputLog("測距センサを停止しました");
-    return true;
+    return FUNC_SUCCESS;
 }

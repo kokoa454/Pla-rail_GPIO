@@ -14,16 +14,18 @@
 #define TRIG 23
 #define ECHO 24
 #define SIG 25
+#define FUNC_SUCCESS 0
+#define FUNC_FAILURE 1
 
 struct timeval start, end;
 
 bool setGpio();
 void startTrain();
 void stopTrain();
-bool startSensor(int *piMeasureDistance);
-bool stopSensor(int iMeadureDistance);
+bool startSensor();
+bool stopSensor();
 void *measureDistance(void *vpUserdata);
-void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpUserdata);
+void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId);
 void outputLog(char cMsg[]);
 
 extern iHndl;

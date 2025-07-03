@@ -1,18 +1,17 @@
-#include <Pla-rail_GPIO.h>
-#define PI5 4
-#define MAX_NUM_USERINPUT 16
-#define COMPLETE_MATCH 0
-#define STOPPING 0
-#define RUN 1
+#include "Plarail_GPIO.h"
 
-//引数を入れてない！！！！
+#define MAX_NUM_USERINPUT 16
+#define COMMAND_COMPLETE_MATCH 0
+#define TRAIN_STOPPING 0
+#define TRAIN_RUNNING 1
 
 int main(void)
 {
-    int iIsTrainRunning = 0;
-    char cUserInput[16]
+    iHndl = lgGpiochipOpen(CHIPSET);
+    int iIsTrainRunning = TRAIN_STOPPING;
+    char cUserInput[16];
 
-    if (setGpio() == true)
+    if (setGpio() == FUNC_SUCCESS)
     {
         goto failure;
     }
@@ -21,43 +20,43 @@ int main(void)
         scanf("%s",cUserInput);
         if (MAX_NUM_USERINPUT >= sizeof(cUserInput))
         {
-            if (strcmp(cUserInput,"start") == COMPLETE_MATCH)
+            if (strcmp(cUserInput,"start") == COMMAND_COMPLETE_MATCH)
             {
-                if (iIsTrainRunning != STOPPING)
+                if (iIsTrainRunning != TRAIN_STOPPING)
                 {
                     outputLog("列車は停車していません");
                     continue;
                 }
-                if (startSensor())
+                if (startSensor() == FUNC_SUCCESS)
                 {
-                    startTrain()
-                    iIsTrainRunning = RUN;
+                    startTrain();
+                    iIsTrainRunning = TRAIN_RUNNING;
                 }
                 else
                 {
                     goto failure;
                 }
             }
-            else if (strcmp(cUserInput,"stop") == COMPLETE_MATCH)
+            else if (strcmp(cUserInput,"stop") == COMMAND_COMPLETE_MATCH)
             {
-                if (iIsTrainRunning != RUN)
+                if (iIsTrainRunning != TRAIN_RUNNING)
                 {
                     outputLog("列車は発車していません");
                     continue;
                 }
-                if (stopSensor())
+                if (stopSensor() == FUNC_SUCCESS)
                 {
                     stopTrain();
-                    iIsTrainRunning = STOPPING;
+                    iIsTrainRunning = TRAIN_STOPPING;
                 }
                 else
                 {
                     goto failure;
                 }
             }
-            else if ((strcmp(cUserInput,"exit") == COMPLETE_MATCH))
+            else if ((strcmp(cUserInput,"exit") == COMMAND_COMPLETE_MATCH))
             {
-                if (iIsTrainRunning != STOPPING)
+                if (iIsTrainRunning != TRAIN_STOPPING)
                 {
                     outputLog("列車を停車させてください");
                 }
@@ -78,10 +77,10 @@ int main(void)
         }
     }
 
-    lgGpiochipClose(iHundl);
+    lgGpiochipClose(iHndl);
     return EXIT_SUCCESS;
 
     failure://失敗
-        lgGpiochipClose(iHundl);
+        lgGpiochipClose(iHndl);
         return EXIT_FAILURE;
 }

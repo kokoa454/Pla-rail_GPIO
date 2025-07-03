@@ -1,24 +1,22 @@
 #include "Plarail_GPIO.h"
 
-bool startSensor(int *piMeasureDistanceId)
+bool startSensor()
 {
-    int iUserdata = 0;
+    int *piMeasureDistanceId = malloc(sizeof(int));
 
-    if(lgGpioSetAlertFunc(iHndl, ECHO, catchEcho, NULL) != 0)
+    *piMeasureDistanceId = lgThreadStart(measureDistance, NULL);
+
+    if (*piMeasureDistanceId != NULL) {
+        outputLog("測距センサの起動に失敗しました");
+        return false;
+    }
+
+    if(lgGpioSetAlertFunc(iHndl, ECHO, catchEcho, piMeasureDistanceId) == FUNC_FAILURE)
     {
         outputLog("測距センサの起動に失敗しました");
-        return false;
+        return FUNC_FAILURE;
     }
-    
-    int iMeasureDistanceId = lgThreadStart(measureDistance, &iUserdata);
-
-    if (iMeasureDistanceId != NULL) {
-        outputLog("測距センサの起動に失敗しました");
-        return false;
-    }
-
-    *piMeasureDistanceId = iMeasureDistanceId;
 
     outputLog("測距センサを起動しました");
-    return true;
+    return FUNC_SUCCESS;
 }
