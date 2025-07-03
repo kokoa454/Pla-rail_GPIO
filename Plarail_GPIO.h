@@ -17,8 +17,6 @@
 #define FUNC_SUCCESS 0
 #define FUNC_FAILURE 1
 
-struct timeval start, end;
-
 bool setGpio();
 void startTrain();
 void stopTrain();
@@ -28,6 +26,7 @@ void *measureDistance(void *vpUserdata);
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId);
 void outputLog(char cMsg[]);
 
-extern iHndl;
+extern int iHndl;
+extern pthread_t *pMeasureDistanceId;
 
 #endif

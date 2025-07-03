@@ -1,5 +1,8 @@
 #include "Plarail_GPIO.h"
+
 #define AEBS_DISTANCE 10.0 //自動停止までの距離
+
+struct timeval start, end;
 
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId)
 {
