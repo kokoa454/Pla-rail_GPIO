@@ -9,21 +9,23 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-#include <pthread.h>
 
+#define CHIPSET 4
 #define TRIG 23
 #define ECHO 24
 #define SIG 25
 
 struct timeval start, end;
 
-bool setGpio(int iHndl);
-void startTrain(int iHndl);
-void stopTrain(int iHndl);
-bool startSensor(int iHndl, pthread_t *pThreadID);
-bool stopSensor(int iHndl, pthread_t threadID);
-void *measureDistance(void *vpArg);
+bool setGpio();
+void startTrain();
+void stopTrain();
+bool startSensor(int *piMeasureDistance);
+bool stopSensor(int iMeadureDistance);
+void *measureDistance(void *vpUserdata);
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpUserdata);
 void outputLog(char cMsg[]);
+
+extern iHndl;
 
 #endif
