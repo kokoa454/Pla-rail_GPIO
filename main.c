@@ -69,7 +69,7 @@ int main(void)
         }
         else
         {
-            outputLog("規定のコマンドを入力してください");
+            outputLog("コマンド名が違います");
         }
     }
 

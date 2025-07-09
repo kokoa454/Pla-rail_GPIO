@@ -8,10 +8,10 @@ bool startSensor()
 
     if (pMeasureDistanceId == NULL) {
         outputLog("測距センサの起動に失敗しました");
-        return false;
+        return FUNC_FAILURE;
     }
 
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, pMeasureDistanceId) == FUNC_FAILURE)
+    if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, pMeasureDistanceId) != 0)
     {
         outputLog("測距センサの起動に失敗しました");
         stopSensor(pMeasureDistanceId);

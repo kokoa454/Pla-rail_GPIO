@@ -7,21 +7,21 @@ bool setGpio()
     int iFlgOut = 0;
     
     // 測距センサーのTRIGGERの設定
-    if(lgGpioClaimOutput(iHndl, iFlgOut, TRIG, LG_LOW) == FUNC_FAILURE)
+    if(lgGpioClaimOutput(iHndl, iFlgOut, TRIG, LG_LOW) == LGGPIO_FAILURE)
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
     }
     
     // リレーのSIGの設定
-    if(lgGpioClaimOutput(iHndl, iFlgOut, SIG, LG_LOW) == FUNC_FAILURE)
+    if(lgGpioClaimOutput(iHndl, iFlgOut, SIG, LG_LOW) == LGGPIO_FAILURE)
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
     }
 
     // 測距センサーのECHOの設定
-    if(lgGpioClaimInput(iHndl, iFlgIn, ECHO) == FUNC_FAILURE)
+    if(lgGpioClaimInput(iHndl, iFlgIn, ECHO) == LGGPIO_FAILURE)
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;

@@ -14,14 +14,16 @@
 #define TRIG 23
 #define ECHO 24
 #define SIG 25
-#define FUNC_SUCCESS 0
-#define FUNC_FAILURE 1
+#define FUNC_SUCCESS true
+#define FUNC_FAILURE false
+#define LGGPIO_SUCCESS 0
+#define LGGPIO_FAILURE -1
 
 bool setGpio();
 void startTrain();
 void stopTrain();
 bool startSensor();
-bool stopSensor();
+bool stopSensor(phthread_t *pMeasureDistanceId);
 void *measureDistance(void *vpUserdata);
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId);
 void outputLog(char cMsg[]);

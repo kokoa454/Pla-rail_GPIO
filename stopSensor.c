@@ -2,7 +2,7 @@
 
 bool stopSensor(pthread_t *pMeasureDistanceId)
 {
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) == FUNC_FAILURE)
+    if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) == LGGPIO_FAILURE)
     {
         outputLog("測距センサの停止に失敗しました");
         return FUNC_FAILURE;
