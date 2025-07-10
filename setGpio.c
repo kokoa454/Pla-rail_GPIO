@@ -1,6 +1,6 @@
 #include "Plarail_GPIO.h"
 
-bool setGpio()
+bool setGpio(int iHndl)
 {
     // ラズパイからの入力・出力の設定
     int iFlgIn = 0;

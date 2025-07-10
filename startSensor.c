@@ -2,19 +2,19 @@
 
 pthread_t *pMeasureDistanceId = NULL;
 
-bool startSensor()
+bool startSensor(int iHndl)
 {
-    pthread_t *pMeasureDistanceId = lgThreadStart(measureDistance, NULL);
+    *pMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
 
     if (pMeasureDistanceId == NULL) {
         outputLog("測距センサの起動に失敗しました");
         return FUNC_FAILURE;
     }
 
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, pMeasureDistanceId) != 0)
+    if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, &iHndl) != 0)
     {
         outputLog("測距センサの起動に失敗しました");
-        stopSensor(pMeasureDistanceId);
+        stopSensor(iHndl, pMeasureDistanceId);
         return FUNC_FAILURE;
     }
 
