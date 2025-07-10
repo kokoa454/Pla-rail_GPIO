@@ -4,7 +4,7 @@
 
 struct timeval start, end;
 
-void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId)
+void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpHndl)
 {
     long lUsec = 0;
     float fResult = 0;
@@ -12,7 +12,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDist
     struct timeval end;
 
     gettimeofday(&start,NULL);
-    while(lgGpioRead(iHndl,ECHO) == LG_HIGH);//ECHOがhighの間
+    while(lgGpioRead(*(int*)vpHndl,ECHO) == LG_HIGH);//ECHOがhighの間
     gettimeofday(&end,NULL);
 
     lUsec = (end.tv_sec - start.tv_sec) * 1000000L + (end.tv_usec - start.tv_usec);
@@ -20,7 +20,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDist
     
     if (AEBS_DISTANCE >= fResult)
     {
-        stopSensor((int*)vpMeasureDistanceId);
+        stopSensor((int*)vpHndl);
         stopTrain();
     }
 }

@@ -1,19 +1,19 @@
 #include "Plarail_GPIO.h"
 
-void *measureDistance(void *vpUserdata)
+void *measureDistance(void *vpHndl)
 {
     while(1)
     {
-        if(lgGpioRead(iHndl, TRIG) == LG_HIGH)
+        if(lgGpioRead(*(int*)vpHndl, TRIG) == LG_HIGH)
         {
             outputLog("測距センサの異常を検知しました");
-            lgGpioWrite(iHndl, TRIG, LG_LOW);
+            lgGpioWrite(*(int*)vpHndl, TRIG, LG_LOW);
         } 
         else 
         {
-            lgGpioWrite(iHndl, TRIG, LG_HIGH);
+            lgGpioWrite(*(int*)vpHndl, TRIG, LG_HIGH);
             usleep(10);
-            lgGpioWrite(iHndl, TRIG, LG_LOW);
+            lgGpioWrite(*(int*)vpHndl, TRIG, LG_LOW);
             usleep(250000);
         }
     }

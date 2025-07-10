@@ -19,16 +19,15 @@
 #define LGGPIO_SUCCESS 0
 #define LGGPIO_FAILURE -1
 
-bool setGpio();
-void startTrain();
-void stopTrain();
-bool startSensor();
-bool stopSensor(phthread_t *pMeasureDistanceId);
-void *measureDistance(void *vpUserdata);
-void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpMeasureDistanceId);
+bool setGpio(int iHndl);
+void startTrain(int iHndl);
+void stopTrain(int iHndl);
+bool startSensor(int iHndl);
+bool stopSensor(int iHndl, phthread_t *pMeasureDistanceId);
+void *measureDistance(void *vpHndl);
+void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpHndl);
 void outputLog(char cMsg[]);
 
-extern int iHndl;
 extern pthread_t *pMeasureDistanceId;
 
 #endif

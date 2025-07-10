@@ -1,6 +1,6 @@
 #include "Plarail_GPIO.h"
 
-bool stopSensor(pthread_t *pMeasureDistanceId)
+bool stopSensor(int iHndl)
 {
     if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) == LGGPIO_FAILURE)
     {

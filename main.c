@@ -13,7 +13,7 @@ int main(void)
     int iIsTrainRunning = TRAIN_STOPPING;
     char cUserInput[16];
 
-    if (setGpio() == FUNC_SUCCESS)
+    if (setGpio(iHndl) == FUNC_SUCCESS)
     {
         goto failure;
     }
@@ -26,11 +26,10 @@ int main(void)
             if (iIsTrainRunning != TRAIN_STOPPING)
             {
                 outputLog("列車は停車していません");
-                continue;
             }
-            if (startSensor() == FUNC_SUCCESS)
+            else if (startSensor(iHndl) == FUNC_SUCCESS)
             {
-                startTrain();
+                startTrain(iHndl);
                 iIsTrainRunning = TRAIN_RUNNING;
             }
             else
@@ -43,11 +42,10 @@ int main(void)
             if (iIsTrainRunning != TRAIN_RUNNING)
             {
                 outputLog("列車は発車していません");
-                continue;
             }
-            if (stopSensor(*pMeasureDistanceId) == FUNC_SUCCESS)
+            else if (stopSensor(iHndl, *pMeasureDistanceId) == FUNC_SUCCESS)
             {
-                stopTrain();
+                stopTrain(iHndl);
                 iIsTrainRunning = TRAIN_STOPPING;
             }
             else
