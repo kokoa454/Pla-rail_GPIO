@@ -16,8 +16,6 @@
 #define SIG 25
 #define FUNC_SUCCESS true
 #define FUNC_FAILURE false
-#define LGGPIO_SUCCESS 0
-#define LGGPIO_FAILURE -1
 
 bool setGpio(int iHndl);
 void startTrain(int iHndl);

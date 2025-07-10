@@ -2,7 +2,7 @@
 
 bool stopSensor(int iHndl)
 {
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) == LGGPIO_FAILURE)
+    if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) != 0)
     {
         outputLog("測距センサの停止に失敗しました");
         return FUNC_FAILURE;
