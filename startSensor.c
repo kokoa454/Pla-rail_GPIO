@@ -1,12 +1,10 @@
 #include "Plarail_GPIO.h"
 
-pthread_t *pMeasureDistanceId = NULL;
-
 bool startSensor(int iHndl)
 {
-    *pMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
+    *ppMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
 
-    if (pMeasureDistanceId == NULL) {
+    if (ppMeasureDistanceId == NULL) {
         outputLog("測距センサの起動に失敗しました");
         return FUNC_FAILURE;
     }
@@ -14,7 +12,7 @@ bool startSensor(int iHndl)
     if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, &iHndl) != 0)
     {
         outputLog("測距センサの起動に失敗しました");
-        stopSensor(iHndl, pMeasureDistanceId);
+        stopSensor(iHndl);
         return FUNC_FAILURE;
     }
 

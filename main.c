@@ -5,11 +5,11 @@
 #define TRAIN_STOPPING 0
 #define TRAIN_RUNNING 1
 
-int iHndl = 0;
+pthread_t *ppMeasureDistanceId = NULL;
 
 int main(void)
 {
-    iHndl = lgGpiochipOpen(CHIPSET);
+    int iHndl = lgGpiochipOpen(CHIPSET);
     int iIsTrainRunning = TRAIN_STOPPING;
     char cUserInput[16];
 
@@ -43,7 +43,7 @@ int main(void)
             {
                 outputLog("列車は発車していません");
             }
-            else if (stopSensor(iHndl, *pMeasureDistanceId) == FUNC_SUCCESS)
+            else if (stopSensor(iHndl) == FUNC_SUCCESS)
             {
                 stopTrain(iHndl);
                 iIsTrainRunning = TRAIN_STOPPING;

@@ -8,8 +8,6 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpHndl)
 {
     long lUsec = 0;
     float fResult = 0;
-    struct timeval start;
-    struct timeval end;
 
     gettimeofday(&start,NULL);
     while(lgGpioRead(*(int*)vpHndl,ECHO) == LG_HIGH);//ECHOがhighの間

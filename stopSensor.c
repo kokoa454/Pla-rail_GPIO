@@ -8,7 +8,7 @@ bool stopSensor(int iHndl)
         return FUNC_FAILURE;
     }
 
-    lgThreadStop(pMeasureDistanceId);
+    lgThreadStop(ppMeasureDistanceId);
     
     outputLog("測距センサを停止しました");
     return FUNC_SUCCESS;
