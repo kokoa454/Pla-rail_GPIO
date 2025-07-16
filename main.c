@@ -1,6 +1,5 @@
 #include "Plarail_GPIO.h"
 
-#define MAX_NUM_USERINPUT 16
 #define COMMAND_COMPLETE_MATCH 0
 #define TRAIN_STOPPING 0
 #define TRAIN_RUNNING 1
@@ -12,15 +11,17 @@ int main(void)
     int iHndl = lgGpiochipOpen(CHIPSET);
     int iIsTrainRunning = TRAIN_STOPPING;
     char cUserInput[16];
+    int iTrash = 0;
 
-    if (setGpio(iHndl) == FUNC_SUCCESS)
+    if (setGpio(iHndl) == FUNC_FAILURE)
     {
         goto failure;
     }
     while(1)
     {
+        printf("コマンドを入力してください (start/stop/exit): ");
         scanf("%15s", cUserInput);
-        rewind(stdin);
+        while(iTrash = getchar() != '\n' && iTrash != EOF);
         if (strcmp(cUserInput,"start") == COMMAND_COMPLETE_MATCH)
         {
             if (iIsTrainRunning != TRAIN_STOPPING)
@@ -67,7 +68,7 @@ int main(void)
         }
         else
         {
-            outputLog("コマンド名が違います");
+            printf("コマンド名が違います\n");
         }
     }
 
