@@ -2,7 +2,7 @@
 
 bool startSensor(int iHndl)
 {
-    *ppMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
+    ppMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
 
     if (ppMeasureDistanceId == NULL) {
         outputLog("測距センサの起動に失敗しました");

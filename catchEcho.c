@@ -18,7 +18,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpHndl)
     
     if (AEBS_DISTANCE >= fResult)
     {
-        stopSensor((int*)vpHndl);
+        stopSensor(*(int*)vpHndl);
         stopTrain(*(int*)vpHndl);
     }
 }
