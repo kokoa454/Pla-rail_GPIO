@@ -21,11 +21,11 @@ bool setGpio(int iHndl);
 void startTrain(int iHndl);
 void stopTrain(int iHndl);
 bool startSensor(int iHndl);
-bool stopSensor(int iHndl, phthread_t *pMeasureDistanceId);
+bool stopSensor(int iHndl);
 void *measureDistance(void *vpHndl);
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpHndl);
 void outputLog(char cMsg[]);
 
-extern pthread_t *pMeasureDistanceId;
+extern pthread_t *ppMeasureDistanceId;
 
 #endif
