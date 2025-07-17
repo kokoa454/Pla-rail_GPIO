@@ -2,7 +2,11 @@
 
 void stopTrain(int iHndl)
 {
-    lgGpioWrite(iHndl, SIG, LG_LOW);
+    if(lgGpioWrite(iHndl, SIG, LG_LOW) != 0)
+    {
+        outputLog("列車の停止に失敗しました");
+        return;
+    }
     outputLog("列車を停止させました");
     return;
 }

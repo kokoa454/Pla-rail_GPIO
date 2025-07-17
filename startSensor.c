@@ -16,6 +16,13 @@ bool startSensor(int iHndl)
         return FUNC_FAILURE;
     }
 
+    if(lgGpioClaimAlert(iHndl, LG_SET_PULL_DOWN, LG_RISING_EDGE, ECHO, -1) != 0)
+    {
+        outputLog("測距センサのアラート設定に失敗しました");
+        stopSensor(iHndl);
+        return FUNC_FAILURE;
+    }
+
     outputLog("測距センサを起動しました");
     return FUNC_SUCCESS;
 }

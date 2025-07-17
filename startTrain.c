@@ -2,7 +2,11 @@
 
 void startTrain(int iHndl)
 {
-    lgGpioWrite(iHndl, SIG, LG_HIGH);
+    if(lgGpioWrite(iHndl, SIG, LG_HIGH) != 0)
+    {
+        outputLog("列車の発車に失敗しました");
+        return;
+    }
     outputLog("列車を発車させました");
     return;
 }

@@ -10,7 +10,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define CHIPSET 4
+#define CHIPSET 0
 #define TRIG 23
 #define ECHO 24
 #define SIG 25
