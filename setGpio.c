@@ -20,14 +20,6 @@ bool setGpio(int iHndl)
         return FUNC_FAILURE;
     }
 
-    // 測距センサーのECHOの設定
-    if(lgGpioClaimInput(iHndl, iFlgIn, ECHO) != 0)
-    {
-        outputLog("GPIOの設定に失敗しました");
-        return FUNC_FAILURE;
-    }
-    
-
     outputLog("GPIOを設定しました");
     return FUNC_SUCCESS;
 }
