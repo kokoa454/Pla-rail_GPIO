@@ -2,8 +2,7 @@
 
 bool setGpio(int iHndl)
 {
-    // ラズパイからの入力・出力の設定
-    int iFlgIn = 0;
+    // ラズパイからの出力の設定
     int iFlgOut = 0;
     
     // 測距センサーのTRIGGERの設定

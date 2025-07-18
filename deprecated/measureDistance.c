@@ -2,6 +2,7 @@
 
 void *measureDistance(void *vpHndl)
 {
+    printf("測距センサのスレッドを開始しました\n");
     while(1)
     {
         if(lgGpioRead(*(int*)vpHndl, TRIG) == LG_HIGH)
