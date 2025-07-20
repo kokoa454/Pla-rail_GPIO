@@ -132,7 +132,7 @@ int main(void)
 
 void startTrain(PLARAIL_DATA *pdpPlarailData)
 {
-    //列車を発車に失敗した場合はエラー出力
+    //列車の発車に失敗した場合はエラー出力
     if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, SIG, LG_HIGH))
     {
         outputLog("列車の発車に失敗しました");
@@ -247,7 +247,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
     lUsec = (end.tv_sec - start.tv_sec) * 1000000L + (end.tv_usec - start.tv_usec);
     fResult = (lUsec* 0.034) / 2;
     
-    //列車が障害物県知事停止距離以下になった場合
+    //列車が障害物検知時停止距離以下になった場合
     if (AEBS_DISTANCE >= fResult)
     {
 		printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", fResult);
@@ -255,8 +255,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
         stopTrain(pdpPlarailData);
         pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
 
-        //コマンド入力用printfを再表示
-        printf("コマンドを入力してください (start/stop/exit): ");
+        printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
         fflush(stdout); //出力バッファを空にする
     }
 }
@@ -269,6 +268,7 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
 {
     // ラズパイからの出力の設定
     int iFlgOut = 0;
+    int iFlgIn = 0;
     
     // 測距センサーのTRIGGERの設定
     if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, TRIG, LG_LOW))
@@ -285,7 +285,7 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     }
 
     // 測距センサーのECHOの設定
-    if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iFlgOut, ECHO))
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iFlgIn, ECHO))
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
