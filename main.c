@@ -7,108 +7,133 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define CHIPSET 0
-#define TRIG 23
-#define ECHO 24
-#define SIG 25
-#define FUNC_SUCCESS true
-#define FUNC_FAILURE false
-#define COMMAND_COMPLETE_MATCH 0
-#define TRAIN_STOPPING 0
-#define TRAIN_RUNNING 1
+#define CHIPSET 0 //ラズパイのGPIO番号
+#define TRIG 23 //測距センサーのTRIGGER
+#define ECHO 24 //測距センサーのECHO
+#define SIG 25 //リレーのSIG
+#define FUNC_SUCCESS true //ユーザ関数の実行結果（成功）
+#define FUNC_FAILURE false //ユーザ関数の実行結果（失敗）
+#define COMMAND_COMPLETE_MATCH 0 //strcmpの比較結果
+#define TRAIN_STOPPING 0 //列車の状態（停車中）
+#define TRAIN_RUNNING 1 //列車の状態（動作中）
 #define AEBS_DISTANCE 10.0 //自動停止までの距離
 
-struct timeval start, end;
+bool setGpio(PLARAIL_DATA *pdpPlarailData); //GPIOの設定
+void startTrain(PLARAIL_DATA *pdpPlarailData); //列車の発車
+void stopTrain(PLARAIL_DATA *pdpPlarailData); //列車の停止
+bool startSensor(PLARAIL_DATA *pdpPlarailData); //測距センサの起動
+bool stopSensor(PLARAIL_DATA *pdpPlarailData); //測距センサの停止
+void *measureDistance(void *vpPlarailData); //測距センサのスレッド（TRIG信号の送信）
+void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData); //ECHO信号の受信
+void outputLog(char cMsg[]); //ログ出力
 
-bool setGpio();
-void startTrain();
-void stopTrain();
-bool startSensor();
-bool stopSensor();
-void *measureDistance();
-void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpUserData);
-void outputLog(char cMsg[]);
-
-pthread_t *ppMeasureDistanceId = NULL;
-int iHndl = 0;
-int iIsTrainRunning = TRAIN_STOPPING;
+//GPIOハンドル、列車の動作状態、測距用スレッドのスレッド番号が格納される構造体
+typedef struct {
+    int iHndl;
+    int iIsTrainRunning;
+    pthread_t *ppMeasureDistanceId;
+} PLARAIL_DATA;
 
 int main(void)
 {
-    iHndl = lgGpiochipOpen(CHIPSET);
-    char cUserInput[16];
-    int iTrash = 0;
+    //構造体の初期化
+    PLARAIL_DATA pdPlarailData = {0,0,NULL};
+    pdPlarailData.iHndl = lgGpiochipOpen(CHIPSET);
+    pdPlarailData.iIsTrainRunning = TRAIN_STOPPING;
 
-    if (setGpio() == FUNC_FAILURE)
+    //変数の宣言
+    char cUserInput[16]; //コマンド入力用配列
+    int iTrash = 0; //バッファクリア用変数
+
+    //GPIOの設定が失敗したらプログラム強制終了
+    if (FUNC_FAILURE == setGpio(&pdPlarailData))
     {
         goto failure;
     }
+
+    //コマンド入力はユーザがexitを入力するまで繰り返す
     while(1)
     {
         printf("コマンドを入力してください (start/stop/exit): ");
         scanf("%15s", cUserInput);
-        while ((iTrash = getchar()) != '\n' && iTrash != EOF);
-        if (strcmp(cUserInput,"start") == COMMAND_COMPLETE_MATCH)
+        while ((iTrash = getchar()) != '\n' && iTrash != EOF); //バッファクリア
+
+        //コマンドstartの場合
+        if (COMMAND_COMPLETE_MATCH == strcmp(cUserInput,"start"))
         {
-            if (iIsTrainRunning != TRAIN_STOPPING)
+            //列車が停車していない場合
+            if (TRAIN_STOPPING != pdPlarailData.iIsTrainRunning)
             {
                 outputLog("列車は停車していません");
             }
-            else if (startSensor() == FUNC_SUCCESS)
+            //測距センサの起動に成功した場合
+            else if (FUNC_SUCCESS == startSensor(&pdPlarailData))
             {
-                startTrain();
-                iIsTrainRunning = TRAIN_RUNNING;
+                startTrain(&pdPlarailData);
+                pdPlarailData.iIsTrainRunning = TRAIN_RUNNING;
             }
+            //測距センサの起動に失敗した場合
             else
             {
                 goto failure;
             }
         }
-        else if (strcmp(cUserInput,"stop") == COMMAND_COMPLETE_MATCH)
+        //コマンドstopの場合
+        else if (COMMAND_COMPLETE_MATCH == strcmp(cUserInput,"stop"))
         {
-            if (iIsTrainRunning != TRAIN_RUNNING)
+            //列車が発車していない場合
+            if (TRAIN_RUNNING != pdPlarailData.iIsTrainRunning)
             {
                 outputLog("列車は発車していません");
             }
-            else if (stopSensor() == FUNC_SUCCESS)
+            //測距センサの停止に成功した場合
+            else if (FUNC_SUCCESS == stopSensor(&pdPlarailData))
             {
-                stopTrain();
-                iIsTrainRunning = TRAIN_STOPPING;
+                stopTrain(&pdPlarailData);
+                pdPlarailData.iIsTrainRunning = TRAIN_STOPPING;
             }
+            //測距センサの停止に失敗した場合
             else
             {
                 goto failure;
             }
         }
-        else if ((strcmp(cUserInput,"exit") == COMMAND_COMPLETE_MATCH))
+        //コマンドexitの場合
+        else if ((COMMAND_COMPLETE_MATCH  ==strcmp(cUserInput,"exit")))
         {
-            if (iIsTrainRunning != TRAIN_STOPPING)
+            //列車が停車していない場合
+            if (TRAIN_STOPPING != pdPlarailData.iIsTrainRunning)
             {
                 outputLog("列車を停車させてください");
             }
+            //列車が停車している場合
             else
             {
                 outputLog("プログラムを終了します");
                 break;
             }
         }
+        //コマンド名がstart、stop、exitと一致しない場合
         else
         {
             printf("コマンド名が違います\n");
         }
     }
 
-    lgGpiochipClose(iHndl);
+    //プログラムがexitコマンドで終了した場合
+    lgGpiochipClose(pdPlarailData.iHndl);
     return EXIT_SUCCESS;
 
-    failure://失敗
-        lgGpiochipClose(iHndl);
+    //プログラムが異常終了した場合
+    failure:
+        lgGpiochipClose(pdPlarailData.iHndl);
         return EXIT_FAILURE;
 }
 
-void startTrain()
+void startTrain(PLARAIL_DATA *pdpPlarailData)
 {
-    if(lgGpioWrite(iHndl, SIG, LG_HIGH) != 0)
+    //列車を発車に失敗した場合はエラー出力
+    if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, SIG, LG_HIGH))
     {
         outputLog("列車の発車に失敗しました");
         return;
@@ -117,9 +142,10 @@ void startTrain()
     return;
 }
 
-void stopTrain()
+void stopTrain(PLARAIL_DATA *pdpPlarailData)
 {
-    if(lgGpioWrite(iHndl, SIG, LG_LOW) != 0)
+    //列車の停止に失敗した場合はエラー出力
+    if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, SIG, LG_LOW))
     {
         outputLog("列車の停止に失敗しました");
         return;
@@ -128,27 +154,30 @@ void stopTrain()
     return;
 }
 
-bool startSensor()
+bool startSensor(PLARAIL_DATA *pdpPlarailData)
 {
-    ppMeasureDistanceId = lgThreadStart(measureDistance, &iHndl);
-    int userData;
+    //ppMeasureDistanceIdに測距用スレッドのスレッド番号を格納
+    pdpPlarailData->ppMeasureDistanceId = lgThreadStart(measureDistance, pdpPlarailData);
 
-    if (ppMeasureDistanceId == NULL) {
+    //測距用スレッドのスレッド番号がNULLの場合はエラー出力
+    if (NULL == pdpPlarailData->ppMeasureDistanceId) {
         outputLog("測距センサの起動に失敗しました");
         return FUNC_FAILURE;
     }
 
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, catchEcho, &userData) != 0)
+    //測距センサの起動に失敗した場合はエラー出力
+    if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, ECHO, catchEcho, pdpPlarailData))
     {
         outputLog("測距センサの起動に失敗しました");
-        stopSensor();
+        stopSensor(pdpPlarailData);
         return FUNC_FAILURE;
     }
 
-    if(lgGpioClaimAlert(iHndl, LG_SET_PULL_DOWN, LG_RISING_EDGE, ECHO, -1) != 0)
+    //測距センサのアラート設定に失敗した場合はエラー出力
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimAlert(pdpPlarailData->iHndl, LG_SET_PULL_DOWN, LG_RISING_EDGE, ECHO, -1))
     {
         outputLog("測距センサのアラート設定に失敗しました");
-        stopSensor();
+        stopSensor(pdpPlarailData);
         return FUNC_FAILURE;
     }
 
@@ -156,60 +185,79 @@ bool startSensor()
     return FUNC_SUCCESS;
 }
 
-bool stopSensor()
+bool stopSensor(PLARAIL_DATA *pdpPlarailData)
 {
-    if(lgGpioSetAlertsFunc(iHndl, ECHO, NULL, NULL) != 0)
+    //測距センサの停止に失敗した場合はエラー出力
+    if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, ECHO, NULL, NULL))
     {
         outputLog("測距センサの停止に失敗しました");
         return FUNC_FAILURE;
     }
 
-    lgThreadStop(ppMeasureDistanceId);
+    //測距用スレッドの停止
+    lgThreadStop(pdpPlarailData->ppMeasureDistanceId);
     
     outputLog("測距センサを停止しました");
     return FUNC_SUCCESS;
 }
 
-void *measureDistance()
+void *measureDistance(void *vpPlarailData)
 {
+    //PLARAIL_DATA構造体のポインタを格納
+    PLARAIL_DATA *pdPlarailData = (PLARAIL_DATA *)vpPlarailData;
+
     outputLog("測距センサのスレッドを開始しました");
+
+    //測距センサ起動中は0.25秒おきに10マイクロ秒間TRIGをHIGHにする
     while(1)
     {
-        if(lgGpioRead(iHndl, TRIG) == LG_HIGH)
+        //測距センサの異常を検知した場合
+        if(LG_HIGH == lgGpioRead(pdPlarailData->iHndl, TRIG))
         {
             outputLog("測距センサの異常を検知しました");
-            lgGpioWrite(iHndl, TRIG, LG_LOW);
+            lgGpioWrite(pdPlarailData->iHndl, TRIG, LG_LOW);
         } 
+        //測距センサが正常な場合
         else 
         {
-            lgGpioWrite(iHndl, TRIG, LG_HIGH);
+            lgGpioWrite(pdPlarailData->iHndl, TRIG, LG_HIGH);
             usleep(10);
-            lgGpioWrite(iHndl, TRIG, LG_LOW);
+            lgGpioWrite(pdPlarailData->iHndl, TRIG, LG_LOW);
             usleep(250000);
         }
     }
 }
 
-void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpUserData)
+void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData)
 {
+    //PLARAIL_DATA構造体のポインタを格納
+    PLARAIL_DATA *pdpPlarailData = (PLARAIL_DATA *)vpPlarailData;
+
+    //測距計算用の変数
+    struct timeval start, end;
     long lUsec = 0;
     float fResult = 0;
 
-    gettimeofday(&start,NULL);
-    while(lgGpioRead(iHndl, ECHO) == LG_HIGH);//ECHOがhighの間
-    gettimeofday(&end,NULL);
+    //ECHOがHIGHの間の時間を計測
+    gettimeofday(&start,NULL); //開始時刻
+    while(lgGpioRead(pdpPlarailData->iHndl, ECHO) == LG_HIGH); //ECHOがHIGHの間待機
+    gettimeofday(&end,NULL); //終了時刻
 
+    //測距計算
     lUsec = (end.tv_sec - start.tv_sec) * 1000000L + (end.tv_usec - start.tv_usec);
     fResult = (lUsec* 0.034) / 2;
     
+    //列車が障害物県知事停止距離以下になった場合
     if (AEBS_DISTANCE >= fResult)
     {
 		printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", fResult);
-        stopSensor();
-        stopTrain();
-        iIsTrainRunning = TRAIN_STOPPING;
+        stopSensor(pdpPlarailData);
+        stopTrain(pdpPlarailData);
+        pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
+
+        //コマンド入力用printfを再表示
         printf("コマンドを入力してください (start/stop/exit): ");
-        fflush(stdout);
+        fflush(stdout); //出力バッファを空にする
     }
 }
 
@@ -217,20 +265,27 @@ void outputLog(char cMsg[]){
     printf("%s\n",cMsg);
 }
 
-bool setGpio()
+bool setGpio(PLARAIL_DATA *pdpPlarailData)
 {
     // ラズパイからの出力の設定
     int iFlgOut = 0;
     
     // 測距センサーのTRIGGERの設定
-    if(lgGpioClaimOutput(iHndl, iFlgOut, TRIG, LG_LOW) != 0)
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, TRIG, LG_LOW))
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
     }
     
     // リレーのSIGの設定
-    if(lgGpioClaimOutput(iHndl, iFlgOut, SIG, LG_LOW) != 0)
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
+    {
+        outputLog("GPIOの設定に失敗しました");
+        return FUNC_FAILURE;
+    }
+
+    // 測距センサーのECHOの設定
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iFlgOut, ECHO))
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
