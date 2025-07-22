@@ -166,7 +166,7 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
     }
 
     //測距センサの起動に失敗した場合はエラー出力
-    if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, ECHO, catchEcho, pdpPlarailData))
+    if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, ECHO, catchEcho, pdpPlarailData))
     {
         outputLog("測距センサの起動に失敗しました");
         stopSensor(pdpPlarailData);

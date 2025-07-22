@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "plarail_gpio.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "/home/rasp/Desktop/プログラム/Pla-rail_GPIO/deprecated"
 }
