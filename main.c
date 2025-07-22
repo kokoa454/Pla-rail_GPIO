@@ -18,6 +18,13 @@
 #define TRAIN_RUNNING 1 //列車の状態（動作中）
 #define AEBS_DISTANCE 10.0 //自動停止までの距離
 
+//GPIOハンドル、列車の動作状態、測距用スレッドのスレッド番号が格納される構造体
+typedef struct {
+    int iHndl;
+    int iIsTrainRunning;
+    pthread_t *ppMeasureDistanceId;
+} PLARAIL_DATA;
+
 bool setGpio(PLARAIL_DATA *pdpPlarailData); //GPIOの設定
 void startTrain(PLARAIL_DATA *pdpPlarailData); //列車の発車
 void stopTrain(PLARAIL_DATA *pdpPlarailData); //列車の停止
@@ -26,13 +33,6 @@ bool stopSensor(PLARAIL_DATA *pdpPlarailData); //測距センサの停止
 void *measureDistance(void *vpPlarailData); //測距センサのスレッド（TRIG信号の送信）
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData); //ECHO信号の受信
 void outputLog(char cMsg[]); //ログ出力
-
-//GPIOハンドル、列車の動作状態、測距用スレッドのスレッド番号が格納される構造体
-typedef struct {
-    int iHndl;
-    int iIsTrainRunning;
-    pthread_t *ppMeasureDistanceId;
-} PLARAIL_DATA;
 
 int main(void)
 {
@@ -278,7 +278,7 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     }
     
     // リレーのSIGの設定
-    if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
+    if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
     {
         outputLog("GPIOの設定に失敗しました");
         return FUNC_FAILURE;
