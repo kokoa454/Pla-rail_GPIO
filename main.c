@@ -357,21 +357,21 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     // 測距センサーのTRIGGERの設定
     if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, TRIG, LG_LOW))
     {
-        outputLog("GPIOの設定に失敗しました");
+        outputLog("GPIOの設定に失敗しました(TRIG)");
         return FUNC_FAILURE;
     }
     
     // リレーのSIGの設定
     if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
     {
-        outputLog("GPIOの設定に失敗しました");
+        outputLog("GPIOの設定に失敗しました(SIG)");
         return FUNC_FAILURE;
     }
 
     // 測距センサーのECHOの設定
     if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iFlgIn, ECHO))
     {
-        outputLog("GPIOの設定に失敗しました");
+        outputLog("GPIOの設定に失敗しました(ECHO)");
         return FUNC_FAILURE;
     }
 
