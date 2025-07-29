@@ -210,7 +210,7 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
     }
 
     //測距センサの起動に失敗した場合はエラー出力
-    if(COMMAND_COMPLETE_MATCH != lgGpioWrite(pdpPlarailData->iHndl, ECHO, catchEcho, pdpPlarailData))
+    if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, ECHO, catchEcho, pdpPlarailData))
     {
         outputLog("測距センサの起動に失敗しました");
         stopSensor(pdpPlarailData);
@@ -366,7 +366,7 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     }
     
     // リレーのSIGの設定
-    if(COMMAND_COMPLETE_MATCH != lgGpioSetAlertsFunc(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimOutput(pdpPlarailData->iHndl, iFlgOut, SIG, LG_LOW))
     {
         outputLog("GPIOの設定に失敗しました(SIG)");
         return FUNC_FAILURE;
