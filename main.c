@@ -164,6 +164,7 @@ bool startTrain(PLARAIL_DATA *pdpPlarailData)
         outputLog("列車の発車に失敗しました");
         return FUNC_FAILURE;
     }
+
     outputLog("列車を発車させました");
     return FUNC_SUCCESS;
 }
@@ -183,6 +184,7 @@ bool stopTrain(PLARAIL_DATA *pdpPlarailData)
         outputLog("列車の停止に失敗しました");
         return FUNC_FAILURE;
     }
+
     outputLog("列車を停止させました");
     return FUNC_SUCCESS;
 }
@@ -259,7 +261,7 @@ void *measureDistance(void *vpPlarailData)
     {
         outputLog("引数pdpPlarailDataの値エラー(NULL)");
         lgGpiochipClose(pdpPlarailData->iHndl);
-        exit(EXIT_SUCCESS);
+        exit(EXIT_FAILURE);
     }
 
     outputLog("測距センサのスレッドを開始しました");
@@ -299,7 +301,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
     {
         outputLog("引数pdpPlarailDataの値エラー(NULL)");
         lgGpiochipClose(pdpPlarailData->iHndl);
-        exit(EXIT_SUCCESS);
+        exit(EXIT_FAILURE);
     }
 
     //ECHOがHIGHの間の時間を計測
@@ -319,13 +321,13 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
         //測距センサの停止に失敗した場合
         if(FUNC_FAILURE == stopSensor(pdpPlarailData)){
             lgGpiochipClose(pdpPlarailData->iHndl);
-            exit(EXIT_SUCCESS);
+            exit(EXIT_FAILURE);
         }
 
         //列車の停止に失敗した場合
         if(FUNC_FAILURE == stopTrain(pdpPlarailData)){
             lgGpiochipClose(pdpPlarailData->iHndl);
-            exit(EXIT_SUCCESS);
+            exit(EXIT_FAILURE);
         }
 
         //測距センサの停止に成功し、列車の停止に成功した場合
