@@ -51,14 +51,15 @@ int main(void)
     char cUserInput[USER_INPUT_DATA_SIZE]; //コマンド入力用配列
     int iTrash = 0; //バッファクリア用変数
 
-    for(int i = 0; i < USER_INPUT_DATA_SIZE; i++){
+    for(int i = 0; i < USER_INPUT_DATA_SIZE; i++)
+    {
         cUserInput[i] = '\0';
     }
 
     //GPIOの設定が失敗したらプログラム強制終了
     if (FUNC_FAILURE == setGpio(&pdPlarailData))
     {
-        goto failure;
+        goto FAILURE;
     }
 
     //コマンド入力はユーザがexitを入力するまで繰り返す
@@ -79,14 +80,15 @@ int main(void)
             }
 
             //測距センサの起動に失敗した場合
-            if(FUNC_FAILURE == startSensor(&pdPlarailData)){
-                goto failure;
+            if(FUNC_FAILURE == startSensor(&pdPlarailData))
+            {
+                goto FAILURE;
             }
 
             //列車の発車に失敗した場合
             if(FUNC_FAILURE == startTrain(&pdPlarailData))
             {
-                goto failure;
+                goto FAILURE;
             }
             
             //列車が停止しておらず、測距センサの起動に成功し、列車の発車に成功した場合
