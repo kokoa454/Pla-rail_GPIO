@@ -321,13 +321,15 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
 		printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", fResult);
         
         //測距センサの停止に失敗した場合
-        if(FUNC_FAILURE == stopSensor(pdpPlarailData)){
+        if(FUNC_FAILURE == stopSensor(pdpPlarailData))
+        {
             lgGpiochipClose(pdpPlarailData->iHndl);
             exit(EXIT_FAILURE);
         }
 
         //列車の停止に失敗した場合
-        if(FUNC_FAILURE == stopTrain(pdpPlarailData)){
+        if(FUNC_FAILURE == stopTrain(pdpPlarailData))
+        {
             lgGpiochipClose(pdpPlarailData->iHndl);
             exit(EXIT_FAILURE);
         }
