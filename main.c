@@ -11,6 +11,7 @@
 #define TRIG (23) //測距センサーのTRIGGER
 #define ECHO (24) //測距センサーのECHO
 #define SIG (25) //リレーのSIG
+#define MAG (26) //磁気センサのMAG
 #define FUNC_SUCCESS (true) //ユーザ関数の実行結果（成功）
 #define FUNC_FAILURE (false) //ユーザ関数の実行結果（失敗）
 #define COMMAND_COMPLETE_MATCH (0) //strcmpの比較結果
@@ -29,6 +30,7 @@ typedef struct {
     int iHndl; //GPIOハンドル
     int iIsTrainRunning; //列車の動作状態
     pthread_t *ppMeasureDistanceId; //測距用スレッドのスレッド番号
+    pthread_t *ppMagSensorId; //磁気センサ用スレッドのスレッド番号
 } PLARAIL_DATA;
 
 bool setGpio(PLARAIL_DATA *pdpPlarailData);
@@ -203,9 +205,18 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
     //ppMeasureDistanceIdに測距用スレッドのスレッド番号を格納
     pdpPlarailData->ppMeasureDistanceId = lgThreadStart(measureDistance, pdpPlarailData);
 
+    //ppMagSensorIdに磁気センサ用スレッドのスレッド番号を格納
+    pdpPlarailData->ppMagSensorId = lgThreadStart(measureMag, pdpPlarailData);
+
     //測距用スレッドのスレッド番号がNULLの場合はエラー出力
     if (NULL == pdpPlarailData->ppMeasureDistanceId) {
         outputLog("測距用スレッドのスレッド番号設定に失敗しました");
+        return FUNC_FAILURE;
+    }
+
+    //磁気センサ用スレッドのスレッド番号がNULLの場合はエラー出力
+    if (NULL == pdpPlarailData->ppMagSensorId) {
+        outputLog("磁気センサ用スレッドのスレッド番号設定に失敗しました");
         return FUNC_FAILURE;
     }
 
@@ -225,7 +236,7 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
         return FUNC_FAILURE;
     }
 
-    outputLog("測距センサを起動しました");
+    outputLog("測距センサと磁気センサを起動しました");
     return FUNC_SUCCESS;
 }
 
@@ -247,8 +258,11 @@ bool stopSensor(PLARAIL_DATA *pdpPlarailData)
 
     //測距用スレッドの停止
     lgThreadStop(pdpPlarailData->ppMeasureDistanceId);
+
+    //磁気センサ用スレッドの停止
+    lgThreadStop(pdpPlarailData->ppMagSensorId);
     
-    outputLog("測距センサを停止しました");
+    outputLog("測距センサと磁気センサを停止しました");
     return FUNC_SUCCESS;
 }
 
@@ -288,6 +302,53 @@ void *measureDistance(void *vpPlarailData)
     }
 }
 
+//磁気センサのスレッド（MAG信号の監視）
+void *measureMag(void *vpPlarailData)
+{
+    //PLARAIL_DATA構造体のポインタを格納
+    PLARAIL_DATA *pdpPlarailData = (PLARAIL_DATA *)vpPlarailData;
+
+    if(NULL == pdpPlarailData)
+    {
+        outputLog("引数pdpPlarailDataの値エラー(NULL)");
+        lgGpiochipClose(pdpPlarailData->iHndl);
+        exit(EXIT_FAILURE);
+    }
+
+    outputLog("磁気センサのスレッドを開始しました");
+
+    while(1)
+    {
+        // 磁石に反応した場合
+        if(LG_LOW == lgGpioRead(pdpPlarailData->iHndl, MAG))
+        {
+            outputLog("駅に到着しました");
+
+            //センサの停止に失敗した場合
+            if(FUNC_FAILURE == stopSensor(pdpPlarailData))
+            {
+                lgGpiochipClose(pdpPlarailData->iHndl);
+                exit(EXIT_FAILURE);
+            }
+
+            //列車の停止に失敗した場合
+            if(FUNC_FAILURE == stopTrain(pdpPlarailData))
+            {
+                lgGpiochipClose(pdpPlarailData->iHndl);
+                exit(EXIT_FAILURE);
+            }
+
+            //センサの停止に成功し、列車の停止に成功した場合
+            pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
+
+            printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+            fflush(stdout); //出力バッファを空にする
+        }
+
+        usleep(WAIT_TIME_FOR_MEASURE);
+    }
+}
+
 //ECHO信号の受信
 void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData)
 {
@@ -320,7 +381,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
     {
 		printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", fResult);
         
-        //測距センサの停止に失敗した場合
+        //センサの停止に失敗した場合
         if(FUNC_FAILURE == stopSensor(pdpPlarailData))
         {
             lgGpiochipClose(pdpPlarailData->iHndl);
@@ -334,7 +395,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
             exit(EXIT_FAILURE);
         }
 
-        //測距センサの停止に成功し、列車の停止に成功した場合
+        //センサの停止に成功し、列車の停止に成功した場合
         pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
 
         printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
@@ -353,6 +414,7 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     // ラズパイからの出力の設定
     int iFlgOut = 0;
     int iFlgIn = 0;
+    int iPullUp = 1;
 
     if(NULL == pdpPlarailData)
     {
@@ -378,6 +440,13 @@ bool setGpio(PLARAIL_DATA *pdpPlarailData)
     if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iFlgIn, ECHO))
     {
         outputLog("GPIOの設定に失敗しました(ECHO)");
+        return FUNC_FAILURE;
+    }
+
+    // 磁気センサーのMAGの設定
+    if(COMMAND_COMPLETE_MATCH != lgGpioClaimInput(pdpPlarailData->iHndl, iPullUp, MAG))
+    {
+        outputLog("GPIOの設定に失敗しました(MAG)");
         return FUNC_FAILURE;
     }
 
