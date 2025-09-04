@@ -171,6 +171,7 @@ bool startTrain(PLARAIL_DATA *pdpPlarailData)
         return FUNC_FAILURE;
     }
 
+    usleep(WAIT_TIME_FOR_DEPARTURE); //駅から離れるまでの待ち時間
     outputLog("列車を発車させました");
     return FUNC_SUCCESS;
 }
