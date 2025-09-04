@@ -108,11 +108,11 @@ int main(void)
                 continue;
             }
 
-            //測距センサの停止に失敗した場合
-            if(FUNC_FAILURE == stopSensor(&pdPlarailData))
-            {
-                goto FAILURE;
-            }
+            // //測距センサの停止に失敗した場合
+            // if(FUNC_FAILURE == stopSensor(&pdPlarailData))
+            // {
+            //     goto FAILURE;
+            // }
             
             //列車の停止に失敗した場合
             if(FUNC_FAILURE == stopTrain(&pdPlarailData))
@@ -134,6 +134,7 @@ int main(void)
             //列車が停車している場合
             else
             {
+                stopSensor(&pdPlarailData); //センサの停止
                 outputLog("プログラムを終了します");
                 break;
             }
@@ -149,10 +150,11 @@ int main(void)
     lgGpiochipClose(pdPlarailData.iHndl);
     return EXIT_SUCCESS;
 
-    //プログラムが異常終了した場合
-    FAILURE:
-        lgGpiochipClose(pdPlarailData.iHndl);
-        return EXIT_FAILURE;
+//プログラムが異常終了した場合
+FAILURE:
+    stopSensor(&pdPlarailData); //センサの停止
+    lgGpiochipClose(pdPlarailData.iHndl);
+    return EXIT_FAILURE;
 }
 
 //列車の発車
@@ -346,12 +348,12 @@ void *measureMag(void *vpPlarailData)
                 printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                 fflush(stdout); //出力バッファを空にする
 
-                //センサの停止に失敗した場合
-                if(FUNC_FAILURE == stopSensor(pdpPlarailData))
-                {
-                    lgGpiochipClose(pdpPlarailData->iHndl);
-                    exit(EXIT_FAILURE);
-                }
+                // //センサの停止に失敗した場合
+                // if(FUNC_FAILURE == stopSensor(pdpPlarailData))
+                // {
+                //     lgGpiochipClose(pdpPlarailData->iHndl);
+                //     exit(EXIT_FAILURE);
+                // }
             }
         }
 
@@ -391,12 +393,12 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
     {
 		printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", fResult);
         
-        //センサの停止に失敗した場合
-        if(FUNC_FAILURE == stopSensor(pdpPlarailData))
-        {
-            lgGpiochipClose(pdpPlarailData->iHndl);
-            exit(EXIT_FAILURE);
-        }
+        // //センサの停止に失敗した場合
+        // if(FUNC_FAILURE == stopSensor(pdpPlarailData))
+        // {
+        //     lgGpiochipClose(pdpPlarailData->iHndl);
+        //     exit(EXIT_FAILURE);
+        // }
 
         //列車の停止に失敗した場合
         if(FUNC_FAILURE == stopTrain(pdpPlarailData))
@@ -407,6 +409,22 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
 
         //センサの停止に成功し、列車の停止に成功した場合
         pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
+
+        printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+        fflush(stdout); //出力バッファを空にする
+    }
+    else
+    {
+        //列車の発車に失敗した場合
+        if(FUNC_FAILURE == startTrain(pdpPlarailData))
+        {
+            lgGpiochipClose(pdpPlarailData->iHndl);
+            exit(EXIT_FAILURE);
+        }
+
+        outputLog("\n列車を自動発車させました");
+
+        pdpPlarailData->iIsTrainRunning = TRAIN_RUNNING;
 
         printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
         fflush(stdout); //出力バッファを空にする
