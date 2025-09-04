@@ -24,6 +24,7 @@
 #define HALF_SONIC_SPEED (SONIC_SPEED / 2) //片道分の距離計算
 #define WAIT_TIME_FOR_TRIG (10) //TRIG信号を送信し続けるための待ち時間
 #define WAIT_TIME_FOR_MEASURE (250000) //測距ループを行うための待ち時間
+#define WAIT_TIME_FOR_DEPARTURE (1000000) //駅から離れるまでの待ち時間
 #define USER_INPUT_DATA_SIZE (16) //ユーザ入力データのサイズ
 
 typedef struct {
@@ -206,18 +207,9 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
     //ppMeasureDistanceIdに測距用スレッドのスレッド番号を格納
     pdpPlarailData->ppMeasureDistanceId = lgThreadStart(measureDistance, pdpPlarailData);
 
-    //ppMagSensorIdに磁気センサ用スレッドのスレッド番号を格納
-    pdpPlarailData->ppMagSensorId = lgThreadStart(measureMag, pdpPlarailData);
-
     //測距用スレッドのスレッド番号がNULLの場合はエラー出力
     if (NULL == pdpPlarailData->ppMeasureDistanceId) {
         outputLog("測距用スレッドのスレッド番号設定に失敗しました");
-        return FUNC_FAILURE;
-    }
-
-    //磁気センサ用スレッドのスレッド番号がNULLの場合はエラー出力
-    if (NULL == pdpPlarailData->ppMagSensorId) {
-        outputLog("磁気センサ用スレッドのスレッド番号設定に失敗しました");
         return FUNC_FAILURE;
     }
 
@@ -237,7 +229,20 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
         return FUNC_FAILURE;
     }
 
-    outputLog("測距センサと磁気センサを起動しました");
+    outputLog("測距センサを起動しました");
+
+    usleep(WAIT_TIME_FOR_DEPARTURE); //駅から離れるまでの待ち時間
+
+    //ppMagSensorIdに磁気センサ用スレッドのスレッド番号を格納
+    pdpPlarailData->ppMagSensorId = lgThreadStart(measureMag, pdpPlarailData);
+
+    //磁気センサ用スレッドのスレッド番号がNULLの場合はエラー出力
+    if (NULL == pdpPlarailData->ppMagSensorId) {
+        outputLog("磁気センサ用スレッドのスレッド番号設定に失敗しました");
+        return FUNC_FAILURE;
+    }
+
+    outputLog("磁気センサを起動しました");
     return FUNC_SUCCESS;
 }
 
