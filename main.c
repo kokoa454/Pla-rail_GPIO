@@ -313,12 +313,6 @@ void *measureDistance(void *vpPlarailData)
             {
                 if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING){
                     printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", pdpPlarailData->fDistanceCalculationResult);
-                    // //センサの停止に失敗した場合
-                    // if(FUNC_FAILURE == stopSensor(pdpPlarailData))
-                    // {
-                    //     lgGpiochipClose(pdpPlarailData->iHndl);
-                    //     exit(EXIT_FAILURE);
-                    // }
 
                     //列車の停止に失敗した場合
                     if(FUNC_FAILURE == stopTrain(pdpPlarailData))
@@ -345,7 +339,7 @@ void *measureDistance(void *vpPlarailData)
                     exit(EXIT_FAILURE);
                 }
 
-                outputLog("\n列車を自動発車させました");
+                outputLog("\n\n列車を自動発車させました");
 
                 pdpPlarailData->iIsTrainRunning = TRAIN_RUNNING;
 
@@ -394,13 +388,6 @@ void *measureMag(void *vpPlarailData)
                 
                 printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                 fflush(stdout); //出力バッファを空にする
-
-                // //センサの停止に失敗した場合
-                // if(FUNC_FAILURE == stopSensor(pdpPlarailData))
-                // {
-                //     lgGpiochipClose(pdpPlarailData->iHndl);
-                //     exit(EXIT_FAILURE);
-                // }
             }
         }
 
@@ -434,8 +421,6 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
     //測距計算
     lUsec = (end.tv_sec - start.tv_sec) * USEC_PER_SEC + (end.tv_usec - start.tv_usec);
     pdpPlarailData->fDistanceCalculationResult = lUsec * HALF_SONIC_SPEED;
-    
-    
 }
 
 //ログ出力
