@@ -60,7 +60,9 @@ int main(void)
     {
         cUserInput[i] = '\0';
     }
-
+	
+	printf("【電車でGO】");
+	
     //GPIOの設定が失敗したらプログラム強制終了
     if (FUNC_FAILURE == setGpio(&pdPlarailData))
     {
@@ -70,7 +72,7 @@ int main(void)
     //コマンド入力はユーザがexitを入力するまで繰り返す
     while(1)
     {
-        printf("コマンドを入力してください (start/stop/exit): ");
+        outputLog("\nコマンドを入力してください (start/stop/exit): ");
         scanf("%15s", cUserInput);
         while (((iTrash = getchar()) != '\n') && (EOF != iTrash)); //バッファクリア
 
@@ -143,7 +145,7 @@ int main(void)
         //コマンド名がstart、stop、exitと一致しない場合
         else
         {
-            printf("コマンド名が違います\n");
+            outputLog("コマンド名が違います");
         }
     }
 
@@ -174,7 +176,6 @@ bool startTrain(PLARAIL_DATA *pdpPlarailData)
         return FUNC_FAILURE;
     }
 
-    usleep(WAIT_TIME_FOR_DEPARTURE); //駅から離れるまでの待ち時間
     outputLog("列車を発車させました");
     return FUNC_SUCCESS;
 }
@@ -234,8 +235,6 @@ bool startSensor(PLARAIL_DATA *pdpPlarailData)
     }
 
     outputLog("測距センサを起動しました");
-
-    usleep(WAIT_TIME_FOR_DEPARTURE); //駅から離れるまでの待ち時間
 
     //ppMagSensorIdに磁気センサ用スレッドのスレッド番号を格納
     pdpPlarailData->ppMagSensorId = lgThreadStart(measureMag, pdpPlarailData);
@@ -312,7 +311,7 @@ void *measureDistance(void *vpPlarailData)
             if (AEBS_DISTANCE >= pdpPlarailData->fDistanceCalculationResult)
             {
                 if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING){
-                    printf("\n障害物を検知しました。\n列車までの距離: %.2f cm\n", pdpPlarailData->fDistanceCalculationResult);
+                    printf("\n障害物を検知しました。\n列車までの距離: %.2f cm", pdpPlarailData->fDistanceCalculationResult);
 
                     //列車の停止に失敗した場合
                     if(FUNC_FAILURE == stopTrain(pdpPlarailData))
@@ -324,7 +323,7 @@ void *measureDistance(void *vpPlarailData)
                     //センサの停止に成功し、列車の停止に成功した場合
                     pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
 
-                    printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+                    outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                     fflush(stdout); //出力バッファを空にする
                 }
             }
@@ -338,12 +337,10 @@ void *measureDistance(void *vpPlarailData)
                     lgGpiochipClose(pdpPlarailData->iHndl);
                     exit(EXIT_FAILURE);
                 }
-
-                outputLog("\n\n列車を自動発車させました");
-
+                
                 pdpPlarailData->iIsTrainRunning = TRAIN_RUNNING;
 
-                printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+                outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                 fflush(stdout); //出力バッファを空にする
                 }
             }
@@ -367,6 +364,8 @@ void *measureMag(void *vpPlarailData)
 
     outputLog("磁気センサのスレッドを開始しました");
 
+    usleep(WAIT_TIME_FOR_DEPARTURE); //駅から離れるまでの待ち時間
+
     while(1)
     {
         // 磁石に反応した場合
@@ -374,7 +373,7 @@ void *measureMag(void *vpPlarailData)
         {
             if(LG_LOW == lgGpioRead(pdpPlarailData->iHndl, MAG))
             {
-                outputLog("\n駅に到着しました");
+                outputLog("駅に到着しました");
 
                 //列車の停止に失敗した場合
                 if(FUNC_FAILURE == stopTrain(pdpPlarailData))
@@ -386,8 +385,15 @@ void *measureMag(void *vpPlarailData)
                 //センサの停止に成功し、列車の停止に成功した場合
                 pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
                 
-                printf("コマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+                outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                 fflush(stdout); //出力バッファを空にする
+
+                //測距センサの停止に失敗した場合
+                if(FUNC_FAILURE == stopSensor(pdpPlarailData))
+                {
+                    lgGpiochipClose(pdpPlarailData->iHndl);
+                    exit(EXIT_FAILURE);
+                }
             }
         }
 
@@ -425,7 +431,7 @@ void catchEcho(int iNotification, lgGpioAlert_p lgpGpioinfo, void *vpPlarailData
 
 //ログ出力
 void outputLog(char cMsg[]){
-    printf("%s\n",cMsg);
+    printf("\n%s",cMsg);
 }
 
 //GPIOの設定
