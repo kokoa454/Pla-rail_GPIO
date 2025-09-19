@@ -17,13 +17,13 @@
 #define COMMAND_COMPLETE_MATCH (0) //strcmpの比較結果
 #define TRAIN_STOPPING (0) //列車の状態（停車中）
 #define TRAIN_RUNNING (1) //列車の状態（動作中）
-#define AEBS_DISTANCE (10.0F) //自動停止までの距離
+#define AEBS_DISTANCE (15.0F) //自動停止までの距離
 #define NO_NOTIFY_HANDLE (-1) //通知ハンドルの初期値（lgGpioSetAlertFuncの第5引数）
 #define USEC_PER_SEC (1000000L) //1秒のマイクロ秒
 #define SONIC_SPEED (0.034) //音速をcm/usに変換
 #define HALF_SONIC_SPEED (SONIC_SPEED / 2) //片道分の距離計算
 #define WAIT_TIME_FOR_TRIG (10) //TRIG信号を送信し続けるための待ち時間
-#define WAIT_TIME_FOR_MEASURE (250000) //測距ループを行うための待ち時間
+#define WAIT_TIME_FOR_MEASURE (25000) //測距ループを行うための待ち時間
 #define WAIT_TIME_FOR_DEPARTURE (1000000) //駅から離れるまでの待ち時間
 #define USER_INPUT_DATA_SIZE (16) //ユーザ入力データのサイズ
 
