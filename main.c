@@ -300,52 +300,52 @@ void *measureDistance(void *vpPlarailData)
             outputLog("測距センサの異常を検知しました");
             lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_LOW);
         } 
+
+        continue;
+
         //測距センサが正常な場合
-        else 
+        lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_HIGH);
+        usleep(WAIT_TIME_FOR_TRIG);
+        lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_LOW);
+        
+        //列車が障害物検知時停止距離以下になった場合
+        if (AEBS_DISTANCE >= pdpPlarailData->fDistanceCalculationResult)
         {
-            lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_HIGH);
-            usleep(WAIT_TIME_FOR_TRIG);
-            lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_LOW);
-            
-            //列車が障害物検知時停止距離以下になった場合
-            if (AEBS_DISTANCE >= pdpPlarailData->fDistanceCalculationResult)
-            {
-                if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING){
-                    printf("\n障害物を検知しました。\n列車までの距離: %.2f cm", pdpPlarailData->fDistanceCalculationResult);
+            if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING){
+                printf("\n障害物を検知しました。\n列車までの距離: %.2f cm", pdpPlarailData->fDistanceCalculationResult);
 
-                    //列車の停止に失敗した場合
-                    if(FUNC_FAILURE == stopTrain(pdpPlarailData))
-                    {
-                        lgGpiochipClose(pdpPlarailData->iHndl);
-                        exit(EXIT_FAILURE);
-                    }
-
-                    //センサの停止に成功し、列車の停止に成功した場合
-                    pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
-
-                    outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
-                    fflush(stdout); //出力バッファを空にする
-                }
-            }
-            else
-            {
-                if(pdpPlarailData->iIsTrainRunning == TRAIN_STOPPING){
-
-                //列車の発車に失敗した場合
-                if(FUNC_FAILURE == startTrain(pdpPlarailData))
+                //列車の停止に失敗した場合
+                if(FUNC_FAILURE == stopTrain(pdpPlarailData))
                 {
                     lgGpiochipClose(pdpPlarailData->iHndl);
                     exit(EXIT_FAILURE);
                 }
-                
-                pdpPlarailData->iIsTrainRunning = TRAIN_RUNNING;
+
+                //センサの停止に成功し、列車の停止に成功した場合
+                pdpPlarailData->iIsTrainRunning = TRAIN_STOPPING;
 
                 outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
                 fflush(stdout); //出力バッファを空にする
-                }
             }
-            usleep(WAIT_TIME_FOR_MEASURE);
         }
+        else
+        {
+            if(pdpPlarailData->iIsTrainRunning == TRAIN_STOPPING){
+
+            //列車の発車に失敗した場合
+            if(FUNC_FAILURE == startTrain(pdpPlarailData))
+            {
+                lgGpiochipClose(pdpPlarailData->iHndl);
+                exit(EXIT_FAILURE);
+            }
+            
+            pdpPlarailData->iIsTrainRunning = TRAIN_RUNNING;
+
+            outputLog("\nコマンドを入力してください (start/stop/exit): "); //コマンド入力用printfを再表示
+            fflush(stdout); //出力バッファを空にする
+            }
+        }
+        usleep(WAIT_TIME_FOR_MEASURE);
     }
 }
 
