@@ -299,9 +299,8 @@ void *measureDistance(void *vpPlarailData)
         {
             outputLog("測距センサの異常を検知しました");
             lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_LOW);
-        } 
-
         continue;
+        }
 
         //測距センサが正常な場合
         lgGpioWrite(pdpPlarailData->iHndl, TRIG, LG_HIGH);
@@ -311,7 +310,8 @@ void *measureDistance(void *vpPlarailData)
         //列車が障害物検知時停止距離以下になった場合
         if (AEBS_DISTANCE >= pdpPlarailData->fDistanceCalculationResult)
         {
-            if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING){
+            if(pdpPlarailData->iIsTrainRunning == TRAIN_RUNNING)
+            {
                 printf("\n障害物を検知しました。\n列車までの距離: %.2f cm", pdpPlarailData->fDistanceCalculationResult);
 
                 //列車の停止に失敗した場合
